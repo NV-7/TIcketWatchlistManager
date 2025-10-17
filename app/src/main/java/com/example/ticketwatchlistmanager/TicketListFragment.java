@@ -32,6 +32,9 @@ public class TicketListFragment extends Fragment {
     private Button entryButton;
 
     private Boolean itemSelected = true;
+    private SmsReceiver smsReceiver;
+    private ArrayAdapter<String> adapter;
+
 
     public static TicketListFragment newInstance() {
         return new TicketListFragment();
@@ -57,7 +60,6 @@ public class TicketListFragment extends Fragment {
         tickers.add("NEE");
         tickers.add("AAPL");
         tickers.add("DIS");
-
         entry.setHint("Add new entry here");
 
         entryButton.setOnClickListener(new View.OnClickListener() {
@@ -67,11 +69,13 @@ public class TicketListFragment extends Fragment {
                 addEntry(entryText);
                 Toast.makeText(getContext(), "Entry added: " + entryText, Toast.LENGTH_SHORT).show();
             }
-        });
+
+        }
+        );
 
 
         tickerSpinner =  view.findViewById(R.id.tickerSpinner);
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(),
+         adapter = new ArrayAdapter<>(getContext(),
                 android.R.layout.simple_list_item_1, tickers);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         tickerSpinner.setAdapter(adapter);
@@ -87,14 +91,16 @@ public class TicketListFragment extends Fragment {
                     Toast.makeText(getContext(), "Item selected: " + selectedItem, Toast.LENGTH_SHORT).show();
                 }
             }
-
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
                 sharedTickerViewModel.setSelectedTicker(null);
                 Toast.makeText(getContext(), "Nothing selected", Toast.LENGTH_SHORT).show();
             }
         });
-
+        sharedTickerViewModel.getNewTicker().observe(getViewLifecycleOwner(), newTicker -> {
+            if(newTicker != null && !tickers.contains(newTicker))
+            addEntry(newTicker);
+        });
     }
 
 public void addEntry(String entry){
@@ -104,6 +110,9 @@ public void addEntry(String entry){
         }
         else {
             tickers.add(entry);
+        }
+        if(adapter != null){
+            adapter.notifyDataSetChanged();
         }
 }
 
