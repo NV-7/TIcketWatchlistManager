@@ -15,13 +15,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Toast;
 
 public class infoWebFragment extends Fragment {
 
     private SharedTickerViewModel sharedTickerViewModel;
     private InfoWebViewModel mViewModel;
     private WebView webView;
-    private TicketListFragment ticketListFragment;
     private String defaultUrl = "https://seekingalpha.com/";
 
     public infoWebFragment() {
@@ -41,7 +41,7 @@ public class infoWebFragment extends Fragment {
         sharedTickerViewModel = new ViewModelProvider(requireActivity()).get(SharedTickerViewModel.class);
 
         mViewModel = new ViewModelProvider(this).get(InfoWebViewModel.class);
-        ticketListFragment = new TicketListFragment();
+
 
         webView = (WebView) getView().findViewById(R.id.web_view);
         webView.getSettings().setJavaScriptEnabled(true);
@@ -56,31 +56,34 @@ public class infoWebFragment extends Fragment {
             }
         });
 
-        sharedTickerViewModel.getSelectedTicker().
+        sharedTickerViewModel.getSelectedTicker().observe(getViewLifecycleOwner(), ticker -> {
+            updateWebView(ticker);
+        });
 
-    observe(getViewLifecycleOwner(), new Observer<String>()
+        sharedTickerViewModel.getNewTicker().observe(getViewLifecycleOwner(), newTicker -> {
+            if (newTicker != null && !newTicker.isEmpty()) {
+                Toast.makeText(getContext(), "WebView updating to: " + newTicker, Toast.LENGTH_SHORT).show();
+                updateWebView(newTicker);
+            }
+        });
 
-    {
+        if (sharedTickerViewModel.getSelectedTicker().
 
-        @Override
-        public void onChanged (String ticker){
-        if (ticker != null && !ticker.isEmpty()) {
-            webView.loadUrl(defaultUrl + "/symbol/" + ticker);
-        } else {
+                getValue() == null) {
             webView.loadUrl(defaultUrl);
         }
     }
-    });
 
-        if(sharedTickerViewModel.getSelectedTicker().
+    private void updateWebView(String ticker) {
+        if (ticker != null && !ticker.isEmpty()) {
+            // Construct the specific symbol URL
+            webView.loadUrl(defaultUrl + "/symbol/" + ticker);
+        } else {
+            // Load the default homepage
+            webView.loadUrl(defaultUrl);
+        }
 
-    getValue() ==null)
 
-    {
-        webView.loadUrl(defaultUrl);
     }
-}
-
-
 }
 

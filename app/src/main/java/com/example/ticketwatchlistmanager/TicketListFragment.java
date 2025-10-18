@@ -32,7 +32,6 @@ public class TicketListFragment extends Fragment {
     private Button entryButton;
 
     private Boolean itemSelected = true;
-    private SmsReceiver smsReceiver;
     private ArrayAdapter<String> adapter;
 
 
@@ -66,23 +65,31 @@ public class TicketListFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 String entryText = entry.getText().toString();
-                addEntry(entryText);
-                Toast.makeText(getContext(), "Entry added: " + entryText, Toast.LENGTH_SHORT).show();
+                if (addEntry(entryText)) {
+                    entry.setText("");
+                    Toast.makeText(getContext(), "Entry added: " + entryText, Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getContext(), "Entry is invalid or a duplicate.", Toast.LENGTH_SHORT).show();
+                }
+
             }
-
-        }
-        );
+        });
 
 
-        tickerSpinner =  view.findViewById(R.id.tickerSpinner);
-         adapter = new ArrayAdapter<>(getContext(),
-                android.R.layout.simple_list_item_1, tickers);
+            tickerSpinner =view.findViewById(R.id.tickerSpinner);
+            adapter =new ArrayAdapter<>(
+
+            getContext(),
+
+            android.R.layout.simple_spinner_item,tickers);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         tickerSpinner.setAdapter(adapter);
 
-        tickerSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
+        tickerSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
+
+            {
+                @Override
+                public void onItemSelected (AdapterView < ? > parent, View view,int pos, long id){
                 if (itemSelected) {
                     itemSelected = false;
                 } else {
@@ -91,34 +98,45 @@ public class TicketListFragment extends Fragment {
                     Toast.makeText(getContext(), "Item selected: " + selectedItem, Toast.LENGTH_SHORT).show();
                 }
             }
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
+
+                @Override
+                public void onNothingSelected (AdapterView < ? > parent) {
                 sharedTickerViewModel.setSelectedTicker(null);
                 Toast.makeText(getContext(), "Nothing selected", Toast.LENGTH_SHORT).show();
             }
-        });
-        sharedTickerViewModel.getNewTicker().observe(getViewLifecycleOwner(), newTicker -> {
-            if(newTicker != null && !tickers.contains(newTicker))
-            addEntry(newTicker);
-        });
+            });
+        sharedTickerViewModel.getNewTicker().
+
+            observe(getViewLifecycleOwner(),newTicker ->
+            {
+                if (newTicker != null && !tickers.contains(newTicker)) {
+                    addEntry(newTicker);
+                }
+
+            });
+        }
+
+        public boolean addEntry (String entry){
+            int size = tickers.size();
+            if(entry == null || entry.isEmpty()){
+                return false;
+            }
+            if (tickers.contains(entry)){
+                return false;
+            }
+            if (size >= 6) {
+                tickers.remove(5);
+                tickers.add(entry);
+            } else {
+                tickers.add(entry);
+            }
+            if (adapter != null) {
+                adapter.notifyDataSetChanged();
+            }
+            return true;
+        }
+
     }
 
-public void addEntry(String entry){
-        int size = tickers.size();
-        if(size >= 6){
-            tickers.set(5, entry);
-        }
-        else {
-            tickers.add(entry);
-        }
-        if(adapter != null){
-            adapter.notifyDataSetChanged();
-        }
-}
-
-    public String getSelectedItem() {
-        return selectedItem;
-    }
 
 
-}

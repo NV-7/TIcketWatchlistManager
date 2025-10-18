@@ -13,10 +13,9 @@ public class SmsReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        Bundle bundle = intent.getExtras();
-        Intent activityIntentLauncher = new Intent(context, MainActivity.class);
-        activityIntentLauncher.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+
         if (intent.getAction().equals("android.provider.Telephony.SMS_RECEIVED")) {
+            Bundle bundle = intent.getExtras();
             if (bundle != null) {
                 final Object[] pdusObj = (Object[]) bundle.get("pdus");
                 SmsMessage[] messages = new SmsMessage[pdusObj.length];
@@ -25,16 +24,19 @@ public class SmsReceiver extends BroadcastReceiver {
                         String format = bundle.getString("format");
                         messages[i] = SmsMessage.createFromPdu((byte[]) pdusObj[i], format);
                     }
-                    String senderNum = messages[i].getOriginatingAddress();
+                   // String senderNum = messages[i].getOriginatingAddress();
                     String message = messages[i].getMessageBody();
                     if (formatChecker(message) == true) {
-
                         String ticker = reFormat(message);
                         String tickerKey = "TickerSymbol";
+                        Intent activityIntentLauncher = new Intent(context, MainActivity.class);
+                        activityIntentLauncher.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                         activityIntentLauncher.putExtra(tickerKey, ticker);
                         context.startActivity(activityIntentLauncher);
-                        Toast.makeText(context, ticker, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context, "Ticker added: " + ticker , Toast.LENGTH_SHORT).show();
                     } else {
+                        Intent activityIntentLauncher = new Intent(context, MainActivity.class);
+                        activityIntentLauncher.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                         Toast.makeText(context, "Invalid format, Ticker not added", Toast.LENGTH_SHORT).show();
                         context.startActivity(activityIntentLauncher);
                     }
@@ -45,11 +47,13 @@ public class SmsReceiver extends BroadcastReceiver {
     }
 
     public Boolean formatChecker(String message) {
-        String regex = "^Ticker:<<[A-Z0-9]+>>$";
+        String regex = "^Ticker:<<[a-zA-Z0-9]+>>$";
+
         return message != null && message.trim().matches(regex);
     }
     public String reFormat(String message){
         String rtn = trimTicker(message);
+        rtn = rtn.toUpperCase();
         return rtn;
     }
 

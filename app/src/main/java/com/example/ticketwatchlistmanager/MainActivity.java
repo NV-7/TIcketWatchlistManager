@@ -21,25 +21,16 @@ import androidx.lifecycle.ViewModelProvider;
 public class MainActivity extends AppCompatActivity {
 
     private static final int SMS_PERMISSION_CODE = 101;
-    private Spinner tickerSpinner;
-private SmsReceiver smsReceiver;
-    private final String[] dtickers = {"NEE", "AAPL", "DIS"};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        registerSmsReceiver();
-        IntentFilter intentFilter = new IntentFilter("android.provider.Telephony.SMS_RECEIVED");
-        smsReceiver = new SmsReceiver();
-        registerReceiver(smsReceiver, intentFilter);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECEIVE_SMS}, SMS_PERMISSION_CODE);
-        } else {
-            registerSmsReceiver();
         }
 
 
@@ -50,17 +41,25 @@ private SmsReceiver smsReceiver;
             ft.add(R.id.web_fragment, new infoWebFragment());
             ft.commit();
         }
-
         intentHandler(getIntent());
 
     }
 
+//    @Override
+//    protected void onStart() {
+//        super.onStart();
+//        intentHandler(getIntent());
+//    }
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        intentHandler(intent);
+    }
 
     private void intentHandler(Intent intent){
         String tickerSymbol = "TickerSymbol";
         if(intent != null && intent.hasExtra(tickerSymbol)){
             String ticker = intent.getStringExtra(tickerSymbol);
-
             if(ticker != null && !ticker.isEmpty()){
                 SharedTickerViewModel sharedViewModel = new ViewModelProvider(this).get(SharedTickerViewModel.class);
                 sharedViewModel.addNewTicker(ticker);
@@ -71,9 +70,5 @@ private SmsReceiver smsReceiver;
 
     }
 
-    private void registerSmsReceiver() {
-        IntentFilter intentFilter = new IntentFilter("android.provider.Telephony.SMS_RECEIVED");
-        smsReceiver = new SmsReceiver();
-        registerReceiver(smsReceiver, intentFilter);
-    }
+
 }
